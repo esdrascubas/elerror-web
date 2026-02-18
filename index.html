@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Logo con Puntos — Repulsión elegante (12/2) · Tunable</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <canvas id="logoCanvas"></canvas>
+  <div class="menuToggle"><input id="togglePanel" type="checkbox"><label for="togglePanel">Mostrar opciones</label></div>
+  <div class="panel">
+    <div class="row"><strong>Repulsión elegante (12/2)</strong></div>
+    <div class="row"><label>Paso (tamaño malla)</label><input id="step" type="range" min="2" max="48" value="12" step="1"><span id="stepVal" class="val">12 px</span></div>
+    <div class="row"><label>Radio del punto</label><input id="dotR" type="range" min="1" max="10" value="2" step="1"><span id="dotRVal" class="val">2 px</span></div>
+    <div class="row"><label>Radio de influencia</label><input id="effR" type="range" min="1" max="50" value="30" step="1"><span id="effRVal" class="val">30 px</span></div>
+    <div class="row"><label>Perfil de influencia (Lineal ↔ Gauss)</label><input id="falloff" type="range" min="0" max="1" value="0.5" step="0.01"><span id="falloffVal" class="val">50%</span></div>
+    <div class="row"><label>Velocidad de alejarse</label><input id="push" type="range" min="0.5" max="3" value="1" step="0.05"><span id="pushVal" class="val">×1.00</span></div>
+    <div class="row"><label>Velocidad de retorno</label><input id="ret" type="range" min="0.5" max="3" value="1" step="0.05"><span id="retVal" class="val">×1.00</span></div>
+  </div>
+
+  <script src="js/lib/dotsRenderer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
