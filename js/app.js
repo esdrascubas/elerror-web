@@ -17,6 +17,14 @@
 
   const renderer = new DotsRenderer(canvas);
 
+  // Lista de mapas disponibles (puedes añadir nuevas rutas aquí)
+  const MAPS = [
+    'assets/map.json',
+    'assets/pixel_map_el_error.json'
+  ];
+  // Exponer para uso externo / consola
+  window.MAPS = MAPS;
+
   function syncUI(){
     fallVal.textContent = Math.round(+fallEl.value*100)+ '%';
     stepVal.textContent = stepEl.value + ' px';
@@ -80,8 +88,35 @@
   function getMapPath(){
     const params = new URLSearchParams(window.location.search);
     const p = params.get('map');
-    return p || 'assets/map.json';
+    if (!p) return MAPS[0];
+    // Si es un índice numérico, devolver ese mapa
+    if (/^\d+$/.test(p)){
+      const idx = parseInt(p,10);
+      return MAPS[idx] || MAPS[0];
+    }
+    // Si coincide con una ruta en MAPS, devuélvelo
+    if (MAPS.indexOf(p) !== -1) return p;
+    // Otherwise use the raw value (allows arbitrary paths)
+    return p;
   }
   loadMap(getMapPath()).then(data=>{ renderer.setMapData(data); updateFromUI(true); syncUI(); renderer.requestTick && renderer.requestTick(); }).catch(err=>{ console.error('No se pudo cargar el mapa', err); });
 
+  // Permite cambiar el mapa dinámicamente desde la consola o desde UI:
+  window.changeMap = function(path){
+    // allow numeric index or string path
+    var target = path;
+    if (typeof path === 'number' || (/^\d+$/.test(String(path)))){
+      var idx = parseInt(path,10);
+      target = MAPS[idx] || MAPS[0];
+    }
+    loadMap(target)
+      .then(data=>{
+        renderer.setMapData(data);
+        updateFromUI(true);
+        syncUI();
+        renderer.requestTick && renderer.requestTick();
+      })
+      .catch(err=>{ console.error('No se pudo cargar el mapa', err); });
+  };
+  
 })();

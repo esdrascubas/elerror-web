@@ -24,6 +24,10 @@
     this.animId = 0; this.lastNow = 0; this.liveCount = 0;
 
     this.mapData = null; // {width, height, compressed_map}
+    // moved pixels tracking
+    this._movedSet = new Set(); // keys of dots that moved at least once
+    this._movedCount = 0;
+    this._lastLoggedPercent = -1;
 
     this._onResize = this._onResize.bind(this);
     this._tick = this._tick.bind(this);
@@ -40,6 +44,11 @@
   DotsRenderer.prototype.setMapData = function(mapData){
     this.mapData = mapData;
     this.state.clear();
+    // reset moved pixels tracking when a new map is loaded
+    this._movedSet.clear();
+    this._movedCount = 0;
+    this._lastLoggedPercent = -1;
+    if (typeof console !== 'undefined') console.log('Moved pixels: 0%');
     this.requestTick();
   };
 
@@ -126,6 +135,8 @@
 
     var path = new Path2D();
     this.liveCount = 0; var MAX_DISP = Math.round(R * 0.9);
+    var frameTotalDots = 0;
+    var movedChanged = false;
 
     for (var y = 0; y < this.canvas.height; y += stepPx){
       var yLogic = Math.min(H - 1, Math.round(y / (s * dpr)));
@@ -144,6 +155,7 @@
           var xEndScreen = Math.round(end * s * dpr);
           for (; x < xEndScreen; x += stepPx){
             var bx = x, by = y;
+            frameTotalDots++;
             var ix = Math.floor(bx / stepPx), iy = Math.floor(by / stepPx);
             var k = key(ix, iy);
             var st = this.state.get(k); if (!st){ st = {ox:0, oy:0, vx:0, vy:0}; this.state.set(k, st); }
@@ -170,7 +182,8 @@
             st.ox += st.vx * dt; st.oy += st.vy * dt;
             var disp = Math.hypot(st.ox, st.oy);
             if (disp > MAX_DISP){ var sc = MAX_DISP / disp; st.ox *= sc; st.oy *= sc; }
-            if (Math.abs(st.ox)>0.05 || Math.abs(st.oy)>0.05 || Math.abs(st.vx)>0.05 || Math.abs(st.vy)>0.05){ this.liveCount++; }
+            var moved = (Math.abs(st.ox)>0.05 || Math.abs(st.oy)>0.05 || Math.abs(st.vx)>0.05 || Math.abs(st.vy)>0.05);
+            if (moved){ this.liveCount++; if (!this._movedSet.has(k)){ this._movedSet.add(k); this._movedCount++; movedChanged = true; } }
             var cx = bx + st.ox, cy = by + st.oy;
             path.moveTo(cx + radiusPx, cy); path.arc(cx, cy, radiusPx, 0, Math.PI*2);
           }
@@ -180,6 +193,16 @@
       if (((y / stepPx) % 16) === 0){ ctx.fill(path); path = new Path2D(); }
     }
     ctx.fill(path);
+    // log moved percentage when it changes
+    if (movedChanged){
+      var totalPossible = frameTotalDots || this._movedSet.size || 1;
+      var pct = Math.min(100, (this._movedCount / totalPossible) * 100);
+      var pctRounded = Math.round(pct * 100) / 100;
+      if (pctRounded !== this._lastLoggedPercent){
+        this._lastLoggedPercent = pctRounded;
+        if (typeof console !== 'undefined') console.log('Moved pixels: ' + pctRounded + '%');
+      }
+    }
   };
 
   // Expose
