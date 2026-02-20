@@ -24,10 +24,8 @@
     this.animId = 0; this.lastNow = 0; this.liveCount = 0;
 
     this.mapData = null; // {width, height, compressed_map}
-    // moved pixels tracking
-    this._movedSet = new Set(); // keys of dots that moved at least once
-    this._movedCount = 0;
-    this._lastLoggedPercent = -1;
+    // moved-pixels flags for logo pixels (key: "x\ny" on map coordinates)
+    this._movedFlags = new Map();
 
     this._onResize = this._onResize.bind(this);
     this._tick = this._tick.bind(this);
@@ -44,11 +42,20 @@
   DotsRenderer.prototype.setMapData = function(mapData){
     this.mapData = mapData;
     this.state.clear();
-    // reset moved pixels tracking when a new map is loaded
-    this._movedSet.clear();
-    this._movedCount = 0;
-    this._lastLoggedPercent = -1;
-    if (typeof console !== 'undefined') console.log('Moved pixels: 0%');
+      // initialize moved flags: set false for every logo pixel in the map
+    this._movedFlags.clear();
+    if (mapData && mapData.compressed_map){
+      var rows = mapData.compressed_map;
+      for (var ry=0; ry<rows.length; ry++){
+        var row = rows[ry]; if (!row) continue;
+        var xPos = 0;
+        for (var si=0; si<row.length; si++){
+          var seg = row[si]; var isLogo = !!seg[0]; var count = seg[1];
+          if (isLogo){ for (var mx = xPos; mx < xPos + count; mx++){ this._movedFlags.set(key(mx, ry), false); } }
+          xPos += count;
+        }
+      }
+    }
     this.requestTick();
   };
 
@@ -66,13 +73,12 @@
     this.pointerActive = !!active;
     this.pointerX = x||0; this.pointerY = y||0;
     this.requestTick();
+    
   };
 
-  DotsRenderer.prototype.cssToDeviceScale = function(){
-    var sx = this.canvas.width / this.canvas.clientWidth;
-    var sy = this.canvas.height / this.canvas.clientHeight;
-    if (!isFinite(sx) || sx<=0) sx = 1; if (!isFinite(sy) || sy<=0) sy = 1;
-    return {sx:sx, sy:sy};
+  // Return a copy of moved flags map (key -> boolean)
+  DotsRenderer.prototype.getMovedFlags = function(){
+    return new Map(this._movedFlags);
   };
 
   function key(ix,iy){ return ix+'\n'+iy; }
@@ -99,7 +105,8 @@
     var root = getComputedStyle(document.documentElement);
     var bg = root.getPropertyValue('--bg-color').trim() || '#000000';
     var logo = root.getPropertyValue('--logo-color').trim() || '#ff7701';
-    return {bg: bg, logo: logo};
+    var returned = root.getPropertyValue('--returned-color').trim() || root.getPropertyValue('--returned_color').trim() || '';
+    return {bg: bg, logo: logo, returned: returned};
   };
 
   DotsRenderer.prototype.draw = function(now){
@@ -133,10 +140,9 @@
     ctx.fillStyle = colors.bg; ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
     ctx.fillStyle = colors.logo;
 
-    var path = new Path2D();
+    var pathLogo = new Path2D();
+    var pathReturned = new Path2D();
     this.liveCount = 0; var MAX_DISP = Math.round(R * 0.9);
-    var frameTotalDots = 0;
-    var movedChanged = false;
 
     for (var y = 0; y < this.canvas.height; y += stepPx){
       var yLogic = Math.min(H - 1, Math.round(y / (s * dpr)));
@@ -155,7 +161,6 @@
           var xEndScreen = Math.round(end * s * dpr);
           for (; x < xEndScreen; x += stepPx){
             var bx = x, by = y;
-            frameTotalDots++;
             var ix = Math.floor(bx / stepPx), iy = Math.floor(by / stepPx);
             var k = key(ix, iy);
             var st = this.state.get(k); if (!st){ st = {ox:0, oy:0, vx:0, vy:0}; this.state.set(k, st); }
@@ -181,28 +186,66 @@
             st.vx += ax * dt; st.vy += ay * dt;
             st.ox += st.vx * dt; st.oy += st.vy * dt;
             var disp = Math.hypot(st.ox, st.oy);
-            if (disp > MAX_DISP){ var sc = MAX_DISP / disp; st.ox *= sc; st.oy *= sc; }
-            var moved = (Math.abs(st.ox)>0.05 || Math.abs(st.oy)>0.05 || Math.abs(st.vx)>0.05 || Math.abs(st.vy)>0.05);
-            if (moved){ this.liveCount++; if (!this._movedSet.has(k)){ this._movedSet.add(k); this._movedCount++; movedChanged = true; } }
+            if (disp > MAX_DISP){ var sc = MAX_DISP / disp; st.ox *= sc; st.oy *= sc; disp = Math.hypot(st.ox, st.oy); }
+            // Movement detection thresholds tuned to visual grid:
+            // - dispThreshold: fraction of the grid step in device pixels
+            // - velThresholdPerSec: reasonable px/s velocity threshold
+            var dispThreshold = Math.max(0.5, stepPx * 0.25); // e.g., quarter of mesh step
+            var velThresholdPerSec = Math.max(20, stepPx * 4); // px/s
+            // consider moved if either displacement or velocity exceed thresholds
+            var moved = (disp > dispThreshold) || (Math.abs(st.vx) > velThresholdPerSec) || (Math.abs(st.vy) > velThresholdPerSec);
+            if (moved) {
+              // reset rest counter and returned-logging when it becomes active again
+              st._restCount = 0;
+              st._returnedLogged = false;
+            }
+            if (moved) this.liveCount++;
+            // update moved flag for this map pixel (map coords)
+            var mapX = Math.min(W-1, Math.max(0, Math.floor(bx / (s * dpr))));
+            var mapKey = key(mapX, yLogic);
+            // Only record movement for logo pixels (explicit check).
+            if (isLogo && moved && this._movedFlags.has(mapKey)) {
+              this._movedFlags.set(mapKey, true);
+            }
             var cx = bx + st.ox, cy = by + st.oy;
-            path.moveTo(cx + radiusPx, cy); path.arc(cx, cy, radiusPx, 0, Math.PI*2);
+            // If this map pixel moved before and is now at rest, draw it with returned color.
+            // Use thresholds consistent with the movement detection and add simple hysteresis
+            var atRest = (disp <= dispThreshold && Math.abs(st.vx) <= velThresholdPerSec && Math.abs(st.vy) <= velThresholdPerSec);
+            // per-state rest counter for hysteresis (avoid flicker if it oscillates)
+            if (!st._restCount) st._restCount = 0;
+            if (atRest) st._restCount++; else st._restCount = 0;
+            var returnedHysteresisFrames = 3;
+            var isReturned = false;
+            if (this._movedFlags.has(mapKey) && this._movedFlags.get(mapKey) && st._restCount >= returnedHysteresisFrames) isReturned = true;
+            if (isReturned) {
+              // optionally log the transition for debugging
+              if (window.DOTS_RETURNED_DEBUG && !st._returnedLogged) {
+                try { console.log('returned:', mapKey, {ix: mapX, iy: yLogic, state: st}); } catch(e){}
+                st._returnedLogged = true;
+              }
+              // draw returned with slightly larger radius for visibility
+              var returnedRadius = Math.max(1, Math.round(radiusPx * 1.4));
+              pathReturned.moveTo(cx + returnedRadius, cy);
+              pathReturned.arc(cx, cy, returnedRadius, 0, Math.PI*2);
+            } else {
+              pathLogo.moveTo(cx + radiusPx, cy); pathLogo.arc(cx, cy, radiusPx, 0, Math.PI*2);
+            }
           }
         }
         xPos += count;
       }
-      if (((y / stepPx) % 16) === 0){ ctx.fill(path); path = new Path2D(); }
-    }
-    ctx.fill(path);
-    // log moved percentage when it changes
-    if (movedChanged){
-      var totalPossible = frameTotalDots || this._movedSet.size || 1;
-      var pct = Math.min(100, (this._movedCount / totalPossible) * 100);
-      var pctRounded = Math.round(pct * 100) / 100;
-      if (pctRounded !== this._lastLoggedPercent){
-        this._lastLoggedPercent = pctRounded;
-        if (typeof console !== 'undefined') console.log('Moved pixels: ' + pctRounded + '%');
+      if (((y / stepPx) % 16) === 0){
+        // flush batched paths with appropriate colors
+        if (pathLogo && pathLogo._segments !== undefined) { /* noop to avoid lint */ }
+        if (ctx && pathLogo){ ctx.fillStyle = colors.logo; ctx.fill(pathLogo); }
+        if (ctx && pathReturned){ if (colors.returned) { ctx.fillStyle = colors.returned; ctx.fill(pathReturned); } else { ctx.fillStyle = colors.logo; ctx.fill(pathReturned); } }
+        pathLogo = new Path2D(); pathReturned = new Path2D();
       }
     }
+    // final flush
+    if (pathLogo) { ctx.fillStyle = colors.logo; ctx.fill(pathLogo); }
+    if (pathReturned) { if (colors.returned) { ctx.fillStyle = colors.returned; ctx.fill(pathReturned); } else { ctx.fillStyle = colors.logo; ctx.fill(pathReturned); } }
+    // moved-pixels reporting removed
   };
 
   // Expose

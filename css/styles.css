@@ -1,6 +1,8 @@
 :root {
   --bg-color: #000000;   /* fondo */
   --logo-color: #ff7701; /* color de los puntos */
+  --returned_color: #ffffff;
+
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; background: var(--bg-color); overflow: hidden; display: flex; align-items: center; justify-content: center; }

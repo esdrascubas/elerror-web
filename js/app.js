@@ -16,6 +16,8 @@
   const retVal = document.getElementById('retVal');
 
   const renderer = new DotsRenderer(canvas);
+  // Exponer el renderer para acceso desde la consola (ej: renderer.getMovedFlags())
+  window.renderer = renderer;
 
   // Lista de mapas disponibles (puedes añadir nuevas rutas aquí)
   const MAPS = [
@@ -59,6 +61,8 @@
   canvas.addEventListener('pointercancel', ()=>{ renderer.setPointer(false); });
 
   // Touch hover emulation (press & move)
+  // Toggleable debug logs for touch on mobile
+  window.DOTS_TOUCH_DEBUG = window.DOTS_TOUCH_DEBUG || false;
   function getTouchPos(t){ const rect = canvas.getBoundingClientRect(); const {sx,sy}=cssToDeviceScale(); return {x:(t.clientX-rect.left)*sx, y:(t.clientY-rect.top)*sy}; }
   function ts(e){ if(e.cancelable) e.preventDefault(); const t=e.touches&&e.touches[0]; if(!t) return; const p=getTouchPos(t); renderer.setPointer(true, p.x, p.y); }
   function tm(e){ if(e.cancelable) e.preventDefault(); const t=e.touches&&e.touches[0]; if(!t) return; const p=getTouchPos(t); renderer.setPointer(true, p.x, p.y); }
@@ -68,6 +72,20 @@
   canvas.addEventListener('touchmove', tm, {passive:false});
   canvas.addEventListener('touchend', te, {passive:false});
   canvas.addEventListener('touchcancel', tc, {passive:false});
+
+  // Enhanced touch debug: wrap handlers to log when enabled
+  if (window.DOTS_TOUCH_DEBUG) {
+    const _ts = ts, _tm = tm, _te = te, _tc = tc;
+    window.DOTS_TOUCH_DEBUG = true;
+    canvas.removeEventListener('touchstart', ts);
+    canvas.removeEventListener('touchmove', tm);
+    canvas.removeEventListener('touchend', te);
+    canvas.removeEventListener('touchcancel', tc);
+    canvas.addEventListener('touchstart', function(e){ console.log('touchstart', e.touches && e.touches[0] && getTouchPos(e.touches[0])); return _ts(e); }, {passive:false});
+    canvas.addEventListener('touchmove', function(e){ console.log('touchmove', e.touches && e.touches[0] && getTouchPos(e.touches[0])); return _tm(e); }, {passive:false});
+    canvas.addEventListener('touchend', function(e){ console.log('touchend', e.touches && e.touches[0] && getTouchPos(e.touches[0]), 'touchesLen', e.touches && e.touches.length); return _te(e); }, {passive:false});
+    canvas.addEventListener('touchcancel', function(e){ console.log('touchcancel'); return _tc(e); }, {passive:false});
+  }
 
 
   function loadScript(src){
