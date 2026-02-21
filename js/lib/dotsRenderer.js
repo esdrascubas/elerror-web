@@ -29,9 +29,17 @@
 
     this._onResize = this._onResize.bind(this);
     this._tick = this._tick.bind(this);
+    this._totalPixels = 0;
+    this._logoPixels = 0;
+    this._logoPixelsMoved = 0;
+    this._dotReturned = 0;
+    this._dotOriginal = 0;
+    this._eventFired = false;
 
     window.addEventListener('resize', this._onResize);
   }
+
+  
 
   DotsRenderer.prototype.dispose = function(){
     cancelAnimationFrame(this.animId);
@@ -41,9 +49,16 @@
 
   DotsRenderer.prototype.setMapData = function(mapData){
     this.mapData = mapData;
+    this._totalPixels = 0;
+    this._logoPixels = 0;
+    this._logoPixelsMoved = 0;
+    this._dotReturned = 0;
+    this._dotOriginal = 0;
+    this._eventFired = false;
     this.state.clear();
       // initialize moved flags: set false for every logo pixel in the map
     this._movedFlags.clear();
+    this._logoPixelsMoved = 0;
     if (mapData && mapData.compressed_map){
       var rows = mapData.compressed_map;
       for (var ry=0; ry<rows.length; ry++){
@@ -51,7 +66,8 @@
         var xPos = 0;
         for (var si=0; si<row.length; si++){
           var seg = row[si]; var isLogo = !!seg[0]; var count = seg[1];
-          if (isLogo){ for (var mx = xPos; mx < xPos + count; mx++){ this._movedFlags.set(key(mx, ry), false); } }
+          this._totalPixels = this._totalPixels + parseInt(count);
+          if (isLogo){ this._logoPixels = this._logoPixels+parseInt(count); for (var mx = xPos; mx < xPos + count; mx++){ this._movedFlags.set(key(mx, ry), false); } }
           xPos += count;
         }
       }
@@ -104,7 +120,7 @@
     // Colors via CSS variables (external to JS)
     var root = getComputedStyle(document.documentElement);
     var bg = root.getPropertyValue('--bg-color').trim() || '#000000';
-    var logo = root.getPropertyValue('--logo-color').trim() || '#ff7701';
+    var logo = root.getPropertyValue('--lo  go-color').trim() || '#ff7701';
     var returned = root.getPropertyValue('--returned-color').trim() || root.getPropertyValue('--returned_color').trim() || '';
     return {bg: bg, logo: logo, returned: returned};
   };
@@ -112,6 +128,11 @@
   DotsRenderer.prototype.draw = function(now){
     if (!this.mapData) return;
     var map = this.mapData;
+
+     this._dotReturned = 0;
+     this._dotOriginal = 0;
+
+
     var W = map.width, H = map.height, rows = map.compressed_map;
     if (!W || !H || !rows) return;
 
@@ -205,6 +226,7 @@
             var mapKey = key(mapX, yLogic);
             // Only record movement for logo pixels (explicit check).
             if (isLogo && moved && this._movedFlags.has(mapKey)) {
+              if (!this._movedFlags.get(mapKey))  { this._logoPixelsMoved++;}
               this._movedFlags.set(mapKey, true);
             }
             var cx = bx + st.ox, cy = by + st.oy;
@@ -227,8 +249,10 @@
               var returnedRadius = Math.max(1, Math.round(radiusPx * 1.4));
               pathReturned.moveTo(cx + returnedRadius, cy);
               pathReturned.arc(cx, cy, returnedRadius, 0, Math.PI*2);
+              this._dotReturned++;
             } else {
               pathLogo.moveTo(cx + radiusPx, cy); pathLogo.arc(cx, cy, radiusPx, 0, Math.PI*2);
+              this._dotOriginal++;
             }
           }
         }
@@ -243,9 +267,37 @@
       }
     }
     // final flush
-    if (pathLogo) { ctx.fillStyle = colors.logo; ctx.fill(pathLogo); }
-    if (pathReturned) { if (colors.returned) { ctx.fillStyle = colors.returned; ctx.fill(pathReturned); } else { ctx.fillStyle = colors.logo; ctx.fill(pathReturned); } }
+    if (pathLogo) { 
+      ctx.fillStyle = colors.logo; 
+      ctx.fill(pathLogo); }
+    
+    if (pathReturned) 
+      { if (colors.returned) 
+        { ctx.fillStyle = colors.returned; 
+          ctx.fill(pathReturned); } 
+    else 
+      { ctx.fillStyle = colors.logo; 
+        ctx.fill(pathReturned); } }
     // moved-pixels reporting removed
+
+    //console.log("Original:", this._dotOriginal, "; Returned: ", this._dotReturned);
+
+    if (this._dotOriginal < (this._dotReturned * 0.05) && !this._eventFired){
+    var eventCleared; // The custom event that will be created
+    console.log("Original:", this._dotOriginal, "; Returned: ", this._dotReturned);
+
+    console.log("lanzo evento");
+    // Crear evento personalizado con datos (detail)
+    var eventCleared = new CustomEvent('imageCleared', {
+        detail: { id: 10, estado: 'activo' }
+    });
+   // Disparar
+    this.canvas.dispatchEvent(eventCleared);
+    this._eventFired = true;
+  };
+
+
+   
   };
 
   // Expose

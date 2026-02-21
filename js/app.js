@@ -27,6 +27,8 @@
   // Exponer para uso externo / consola
   window.MAPS = MAPS;
 
+  var indexMAP = 0;
+
   function syncUI(){
     fallVal.textContent = Math.round(+fallEl.value*100)+ '%';
     stepVal.textContent = stepEl.value + ' px';
@@ -44,7 +46,8 @@
       pushMul: parseFloat(pushEl.value),
       retMul: parseFloat(retEl.value)
     });
-    if (clearGrid) renderer.state.clear();
+    //if (clearGrid) 
+      renderer.state.clear();
     syncUI();
   }
 
@@ -136,5 +139,17 @@
       })
       .catch(err=>{ console.error('No se pudo cargar el mapa', err); });
   };
+
+  // Escuchar el evento personalizado
+    canvas.addEventListener('imageCleared', (e) => {
+        console.log('Datos recibidos:', e.detail);
+        changeMap(getNextMap());
+    });
+
+    function getNextMap() {
+  const current = MAPS[indexMAP];
+  indexMAP = (indexMAP + 1) % MAPS.length;
+  return current;
+}
   
 })();

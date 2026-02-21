@@ -2,6 +2,7 @@
   --bg-color: #000000;   /* fondo */
   --logo-color: #ff7701; /* color de los puntos */
   --returned_color: #ffffff;
+  --returned_color: #000000;  
 
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
