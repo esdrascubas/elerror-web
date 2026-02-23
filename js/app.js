@@ -27,7 +27,7 @@
   // Exponer para uso externo / consola
   window.MAPS = MAPS;
 
-  var indexMAP = 0;
+  var indexMAP = 1;
 
   function syncUI(){
     fallVal.textContent = Math.round(+fallEl.value*100)+ '%';
@@ -46,8 +46,7 @@
       pushMul: parseFloat(pushEl.value),
       retMul: parseFloat(retEl.value)
     });
-    //if (clearGrid) 
-      renderer.state.clear();
+    if (clearGrid) renderer.state.clear();
     syncUI();
   }
 

@@ -16,3 +16,8 @@ canvas { display: block; width: 100vw; height: 100vh; object-fit: contain; backg
 .menuToggle { position: fixed; right: 12px; top: 12px; z-index: 10; background: rgba(0,0,0,.55); color: #eaeaea; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; padding: 8px 10px; border-radius: 10px; backdrop-filter: blur(4px); display: flex; align-items: center; gap: 8px; }
 .menuToggle input { accent-color: #ff7701; width: 16px; height: 16px; }
 .menuToggle label { font-size: 12px; color: #cfd8e3; user-select: none; }
+
+
+body {
+    background: black;
+}
