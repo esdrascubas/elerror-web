@@ -3,6 +3,7 @@
   --logo-color: #ff7701; /* color de los puntos */
   --returned_color: #ffffff;
   --returned_color: #000000;  
+  --body-bg: #000000;   /* fondo */
 
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -19,5 +20,48 @@ canvas { display: block; width: 100vw; height: 100vh; object-fit: contain; backg
 
 
 body {
-    background: black;
+    background-color: var(--bg-color);
 }
+
+
+/* Contenedor horizontal con scroll-snap */
+.snap-container {
+  display: flex;
+  flex-flow: row nowrap;
+  width: 100vw;
+  height: 100vh;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+}
+
+/* Cada sección ocupa exactamente una “pantalla” */
+.snap-section {
+  flex: 0 0 100vw;     /* ancho de una viewport */
+  height: 100vh;       /* alto de una viewport */
+  scroll-snap-align: start;
+  /* Añade aquí estilos de fondo/tema por sección si quieres, sin contenido */
+}
+
+/* (Opcional) Ocultar la barra de scroll (valora accesibilidad) */
+.snap-container::-webkit-scrollbar { display: none; }
+.snap-container { scrollbar-width: none; }
+
+/* Controles de navegación (posicionamiento básico) */
+.nav-controls {
+  position: fixed;
+  inset: auto 1rem 1rem auto; /* esquina inferior derecha */
+  display: grid;
+  gap: .5rem;
+  z-index: 10;
+}
+.btn-prev, .btn-next {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0,0,0,.25);
+  cursor: pointer;
+}
+.btn-prev:focus, .btn-next:focus { outline: 2px solid rgba(0,0,0,.5); }
