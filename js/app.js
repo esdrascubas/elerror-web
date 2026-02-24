@@ -142,6 +142,7 @@
   // Escuchar el evento personalizado
     canvas.addEventListener('imageCleared', (e) => {
         console.log('Datos recibidos:', e.detail);
+        toggleMenu();
         changeMap(getNextMap());
     });
 
@@ -150,5 +151,14 @@
   indexMAP = (indexMAP + 1) % MAPS.length;
   return current;
 }
+
+function toggleMenu() {
+  document.getElementById("bottomMenu").classList.toggle("show");
+}
+
+
+
+
+
   
 })();
