@@ -1,5 +1,5 @@
 :root {
-  --bg-color: #000000;   /* fondo */
+  --bg-color: rgba(1, 1, 1, 0);;   /* fondo */
   --logo-color: #ff7701; /* color de los puntos */
   --returned_color: #ffffff;
   --returned_color: #000000;  

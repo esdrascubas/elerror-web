@@ -15,8 +15,14 @@
 
 
  <div class="snap-container">
-    <section id="home" class="snap-section h-100 d-flex justify-content-center align-items-center"><canvas id="logoCanvas"></canvas></section>
-    <section id="video" class="snap-section d-flex"><div class="container m-5"><h1>video</h1></div></section>
+    <section id="home" class="snap-section h-100 d-flex justify-content-center align-items-center">
+      <video class="bg-video" onloadstart="this.playbackRate = 1;" src="https://videos.pexels.com/video-files/9694806/9694806-hd_1920_1080_25fps.mp4" autoplay="" muted="" loop="" playsinline="" preload="auto" style="opacity: 1;"></video>
+      <canvas id="logoCanvas"></canvas>
+    </section>
+    <section id="video" class="snap-section d-flex">
+      
+            <video class="bg-video" onloadstart="this.playbackRate = 1;" src="https://videos.pexels.com/video-files/8875671/8875671-uhd_2732_1440_25fps.mp4" autoplay="" muted="" loop="" playsinline="" preload="auto" style="opacity: 1;"></video>
+<div class="container m-5"><h1>video</h1></div></section>
     <!-- <section id="audio" class="snap-section d-flex"> -->
     <section id="audio" class="snap-section d-flex">
 
@@ -39,7 +45,7 @@
 
 
 
-  <div class="menuToggle"><input id="togglePanel" type="checkbox"><label for="togglePanel">Mostrar opciones</label></div>
+  <div class="menuToggle" style="display: none;"><input id="togglePanel" type="checkbox"><label for="togglePanel">Mostrar opciones</label></div>
   <div class="panel">
     <div class="row"><strong>Repulsión elegante (12/2)</strong></div>
     <div class="row"><label>Paso (tamaño malla)</label><input id="step" type="range" min="2" max="48" value="12" step="1"><span id="stepVal" class="val">12 px</span></div>

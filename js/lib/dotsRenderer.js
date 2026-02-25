@@ -1,7 +1,7 @@
 (function(global){
   function DotsRenderer(canvas, options){
     this.canvas = canvas;
-    this.ctx = canvas.getContext('2d', {alpha: false});
+    this.ctx = canvas.getContext('2d', {alpha: true});
     this.state = new Map(); // key: ix\n iy -> {ox, oy, vx, vy}
     this.FALL_MIX = 0.5; // 0=lineal, 1=gauss
     this.BASE_STEP = 12;    // px CSS base
