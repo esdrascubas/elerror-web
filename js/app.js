@@ -153,7 +153,8 @@
 }
 
 function toggleMenu() {
-  document.getElementById("bottomMenu").classList.toggle("show");
+  
+  document.getElementById("bottomMenu").classList.add("show");
 }
 
 
@@ -162,3 +163,10 @@ function toggleMenu() {
 
   
 })();
+
+function goToSection(index) {
+  const sections = document.querySelectorAll(".snap-section");
+  if (sections[index]) {
+    sections[index].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
+  }
+};

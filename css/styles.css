@@ -41,6 +41,7 @@ body {
   flex: 0 0 100vw;     /* ancho de una viewport */
   height: 100vh;       /* alto de una viewport */
   scroll-snap-align: start;
+  position: relative; /* para posicionar elementos dentro si es necesario */
   /* Añade aquí estilos de fondo/tema por sección si quieres, sin contenido */
 }
 
@@ -91,3 +92,30 @@ body {
   transform: translateY(0);
 }
 
+/* VIDEO FONDO SECCION */
+
+
+/* Vídeo a pantalla completa como fondo */
+.snap-section .bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;     /* rellena sin deformar */
+  object-position: right;
+  z-index: 0;
+}
+
+/* (Opcional) capa de oscurecimiento sutil sobre el vídeo */
+.snap-section .bg-video-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.25);
+  z-index: 1;
+}
+
+/* Si añades contenido dentro de la sección, colócalo por encima */
+.snap-section > *:not(.bg-video):not(.bg-video-overlay) {
+  position: relative;
+  z-index: 2;
+}

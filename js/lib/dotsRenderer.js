@@ -186,6 +186,10 @@
             var k = key(ix, iy);
             var st = this.state.get(k); if (!st){ st = {ox:0, oy:0, vx:0, vy:0}; this.state.set(k, st); }
 
+
+            // Dentro del bucle por cada punto:
+            var wasPushedThisFrame = false;
+
             var fx = 0, fy = 0;
             if (this.pointerActive){
               var dx = bx - this.pointerX, dy = by - this.pointerY; var d2 = dx*dx + dy*dy;
@@ -193,6 +197,7 @@
                 var t = 1 - (dist / R); var w_lin = Math.max(0, t);
                 var w = (1 - this.FALL_MIX) * w_lin + (this.FALL_MIX) * g;
                 var F = Fmax * w; var ux = dx/dist, uy = dy/dist; fx += ux*F; fy += uy*F;
+                wasPushedThisFrame = true;
               }
             }
             // movimiento propio
@@ -224,8 +229,13 @@
             // update moved flag for this map pixel (map coords)
             var mapX = Math.min(W-1, Math.max(0, Math.floor(bx / (s * dpr))));
             var mapKey = key(mapX, yLogic);
+
+            if (wasPushedThisFrame){
+              st.userPushed = true; // for potential future use (e.g., visual feedback on pushed pixels)  
+            }
+            
             // Only record movement for logo pixels (explicit check).
-            if (isLogo && moved && this._movedFlags.has(mapKey)) {
+            if (isLogo && moved && st.userPushed && this._movedFlags.has(mapKey)) {
               if (!this._movedFlags.get(mapKey))  { this._logoPixelsMoved++;}
               this._movedFlags.set(mapKey, true);
             }

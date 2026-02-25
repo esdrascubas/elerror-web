@@ -17,7 +17,17 @@
  <div class="snap-container">
     <section id="home" class="snap-section h-100 d-flex justify-content-center align-items-center"><canvas id="logoCanvas"></canvas></section>
     <section id="video" class="snap-section d-flex"><div class="container m-5"><h1>video</h1></div></section>
-    <section id="audio" class="snap-section d-flex"><div class="container m-5"><h1>audio</h1></div></section>
+    <!-- <section id="audio" class="snap-section d-flex"> -->
+    <section id="audio" class="snap-section d-flex">
+
+      <video class="bg-video" src="https://videos.pexels.com/video-files/4380097/4380097-hd_1920_1080_30fps.mp4"
+         autoplay muted loop playsinline preload="auto" ></video>
+
+      <div class="container m-5">
+        <h1>audio</h1>
+        <iframe style="border: 0; width: 350px; height: 654px;" src="https://bandcamp.com/EmbeddedPlayer/album=3751592885/size=large/bgcol=ffffff/linkcol=e99708/transparent=true/" seamless><a href="https://anginedepoitrine.bandcamp.com/album/angine-de-poitrine-vol-1">ANGINE DE POITRINE - VOL.1 de Angine de Poitrine</a></iframe>
+      </div>
+    </section>
     <!-- añade más <section class="snap-section"> según necesites -->
   </div>
 
@@ -55,12 +65,7 @@
 
  
 <script>
-function goToSection(index) {
-  const sections = document.querySelectorAll(".snap-section");
-  if (sections[index]) {
-    sections[index].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
-  }
-}
+
 </script>
 
 
