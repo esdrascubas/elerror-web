@@ -134,6 +134,7 @@
         renderer.setMapData(data);
         updateFromUI(true);
         syncUI();
+        renderer.fadeIn(750); // efecto de fade-in al cambiar mapa
         renderer.requestTick && renderer.requestTick();
       })
       .catch(err=>{ console.error('No se pudo cargar el mapa', err); });

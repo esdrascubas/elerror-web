@@ -71,7 +71,6 @@ body {
 /* ----- MENÚ INFERIOR ----- */
 .bottom-menu {
   position: fixed;
-  left: 50%;
   bottom: 1rem;
   transform: translateX(-50%);
   display: flex;
@@ -84,6 +83,7 @@ body {
   transition: opacity .4s ease, transform .4s ease;
 
   pointer-events: none;
+  z-index: 100;
 }
 
 .bottom-menu.show {
