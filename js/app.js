@@ -134,7 +134,7 @@
         renderer.setMapData(data);
         updateFromUI(true);
         syncUI();
-        renderer.fadeIn(750); // efecto de fade-in al cambiar mapa
+        renderer.fadeIn(150); // efecto de fade-in rápido al cambiar mapa
         renderer.requestTick && renderer.requestTick();
       })
       .catch(err=>{ console.error('No se pudo cargar el mapa', err); });
@@ -170,4 +170,36 @@ function goToSection(index) {
   if (sections[index]) {
     sections[index].scrollIntoView({ behavior: "smooth", block: "nearest", inline: "start" });
   }
-};
+}
+
+// Actualizar el botón activo del menú según la sección visible
+function updateActiveMenuButton() {
+  const container = document.querySelector('.snap-container');
+  const buttons = document.querySelectorAll('#bottomMenu .icon-btn');
+  if (!container || !buttons.length) return;
+  
+  const vw = window.innerWidth || document.documentElement.clientWidth;
+  const currentIndex = Math.round(container.scrollLeft / vw);
+  
+  buttons.forEach((btn, idx) => {
+    if (idx === currentIndex) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+}
+
+// Escuchar cambios de sección
+document.addEventListener('DOMContentLoaded', function() {
+  const container = document.querySelector('.snap-container');
+  if (container) {
+    let scrollTimeout;
+    container.addEventListener('scroll', function() {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(updateActiveMenuButton, 100);
+    });
+    // Actualizar al cargar
+    updateActiveMenuButton();
+  }
+});
