@@ -119,3 +119,66 @@ body {
   position: relative;
   z-index: 2;
 }
+
+/* ----- EFECTOS HOVER PARA THUMBNAILS DE VIDEO ----- */
+.video-thumbnail-link {
+  display: block;
+  text-decoration: none;
+  transition: transform 0.3s ease;
+}
+
+.video-thumbnail-wrapper {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.375rem;
+}
+
+.video-thumbnail {
+  object-fit: cover;
+  transition: transform 0.3s ease, filter 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+.video-thumbnail-link:hover .video-thumbnail {
+  transform: scale(1.05);
+  filter: brightness(1.1);
+  box-shadow: 0 20px 40px rgba(255, 119, 1, 0.3);
+}
+
+/* ----- MODAL DE VIDEO ----- */
+.video-modal .modal-dialog {
+  max-width: 90vw;
+  margin: 1.75rem auto;
+}
+
+.video-modal .modal-content {
+  background: rgba(0, 0, 0, 0.95);
+  border: 2px solid rgba(255, 119, 1, 0.3);
+  border-radius: 0.5rem;
+}
+
+.video-modal .modal-body {
+  padding: 0;
+  position: relative;
+}
+
+.video-modal .btn-close {
+  position: absolute;
+  top: -2.5rem;
+  right: 0;
+  z-index: 1060;
+  background-color: rgba(255, 119, 1, 0.8);
+  opacity: 1;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+}
+
+.video-modal .btn-close:hover {
+  background-color: rgba(255, 119, 1, 1);
+}
+
+.video-modal .ratio {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}

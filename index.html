@@ -19,10 +19,36 @@
       <video class="bg-video" onloadstart="this.playbackRate = 1;" src="https://videos.pexels.com/video-files/9694806/9694806-hd_1920_1080_25fps.mp4" autoplay="" muted="" loop="" playsinline="" preload="auto" style="opacity: 1;"></video>
       <canvas id="logoCanvas"></canvas>
     </section>
-    <section id="video" class="snap-section d-flex">
+    <section id="video" class="snap-section d-flex justify-content-center align-items-center">
+      <video class="bg-video" onloadstart="this.playbackRate = 1;" src="https://videos.pexels.com/video-files/8875671/8875671-uhd_2732_1440_25fps.mp4" autoplay="" muted="" loop="" playsinline="" preload="auto" style="opacity: 1;"></video>
       
-            <video class="bg-video" onloadstart="this.playbackRate = 1;" src="https://videos.pexels.com/video-files/8875671/8875671-uhd_2732_1440_25fps.mp4" autoplay="" muted="" loop="" playsinline="" preload="auto" style="opacity: 1;"></video>
-<div class="container m-5"><h1>video</h1></div></section>
+      <div class="container h-100 d-flex align-items-center">
+        <div class="row g-4 justify-content-center w-100">
+          <!-- Thumbnail 1 -->
+          <div class="col-11 col-sm-10 col-md-6 col-lg-5 col-xl-5">
+            <a href="#" class="video-thumbnail-link" data-video-id="GtXWiOKG2Bk">
+              <div class="ratio ratio-16x9 video-thumbnail-wrapper">
+                <img src="https://img.youtube.com/vi/GtXWiOKG2Bk/maxresdefault.jpg" 
+                     class="img-fluid rounded shadow-lg video-thumbnail" 
+                     alt="Video thumbnail 1">
+              </div>
+            </a>
+            <h5 class="text-white text-center mt-3">Caballos - Directo Rockville 2025.04.12</h5>
+          </div>
+          <!-- Thumbnail 2 -->
+          <div class="col-11 col-sm-10 col-md-6 col-lg-5 col-xl-5">
+            <a href="#" class="video-thumbnail-link" data-video-id="_AUZJDnTmLw">
+              <div class="ratio ratio-16x9 video-thumbnail-wrapper">
+                <img src="https://img.youtube.com/vi/_AUZJDnTmLw/maxresdefault.jpg" 
+                     class="img-fluid rounded shadow-lg video-thumbnail" 
+                     alt="Video thumbnail 2">
+              </div>
+            </a>
+            <h5 class="text-white text-center mt-3">Voy en bici - videoclip</h5>
+          </div>
+        </div>
+      </div>
+    </section>
     <!-- <section id="audio" class="snap-section d-flex"> -->
     <section id="audio" class="snap-section d-flex">
 
@@ -68,11 +94,24 @@
   <script src="js/lib/dotsRenderer.js"></script>
   <script src="js/app.js"></script>
   <script src="js/lib/nav.js"></script>
+  <script src="js/lib/videoModal.js"></script>
 
  
-<script>
+<!-- Modal de Video -->
+<div class="modal fade video-modal" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      <div class="modal-body">
+        <div class="ratio ratio-16x9">
+          <iframe id="videoIframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-</script>
+
 
 
 </body>
