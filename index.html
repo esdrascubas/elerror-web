@@ -14,13 +14,32 @@
   
 
 
- <div class="snap-container">
+ <div class="snap-container" style="visibility: hidden;">
+    <section id="aboutus" class="snap-section d-flex justify-content-center align-items-center">
+      <video class="bg-video" src="https://videos.pexels.com/video-files/3571264/3571264-uhd_2560_1440_30fps.mp4" autoplay muted loop playsinline preload="none" loading="lazy"></video>
+      
+      <div class="container h-100 d-flex align-items-center">
+        <div class="row justify-content-center w-100">
+          <div class="col-11 col-sm-10 col-md-8 col-lg-6">
+            <div class="bio-card">
+              <h1 class="text-white mb-4 text-center">Nosotras</h1>
+              <p class="text-white text-justify">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+              </p>
+              <p class="text-white text-justify">
+                Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     <section id="home" class="snap-section h-100 d-flex justify-content-center align-items-center">
-      <video class="bg-video" onloadstart="this.playbackRate = 1;" src="https://videos.pexels.com/video-files/9694806/9694806-hd_1920_1080_25fps.mp4" autoplay="" muted="" loop="" playsinline="" preload="auto" style="opacity: 1;"></video>
+      <video class="bg-video" onloadstart="this.playbackRate = 1;" src="https://videos.pexels.com/video-files/9694806/9694806-hd_1920_1080_25fps.mp4" autoplay="" muted="" loop="" playsinline="" preload="none" loading="lazy" style="opacity: 1;"></video>
       <canvas id="logoCanvas"></canvas>
     </section>
     <section id="video" class="snap-section d-flex justify-content-center align-items-center">
-      <video class="bg-video" onloadstart="this.playbackRate = 1;" src="https://videos.pexels.com/video-files/8875671/8875671-uhd_2732_1440_25fps.mp4" autoplay="" muted="" loop="" playsinline="" preload="auto" style="opacity: 1;"></video>
+      <video class="bg-video" onloadstart="this.playbackRate = 1;" src="https://videos.pexels.com/video-files/8875671/8875671-uhd_2732_1440_25fps.mp4" autoplay="" muted="" loop="" playsinline="" preload="none" loading="lazy" style="opacity: 1;"></video>
       
       <div class="container h-100 d-flex align-items-center">
         <div class="row g-4 justify-content-center w-100">
@@ -53,7 +72,7 @@
     <section id="audio" class="snap-section d-flex">
 
       <video class="bg-video" src="https://videos.pexels.com/video-files/4380097/4380097-hd_1920_1080_30fps.mp4"
-         autoplay muted loop playsinline preload="auto" ></video>
+         autoplay muted loop playsinline preload="none" loading="lazy" ></video>
 
       <div class="container m-5">
         <h1>audio</h1>
@@ -85,9 +104,10 @@
 
 <!-- Menú inferior -->
 <nav id="bottomMenu" class="bottom-menu">
-  <button class="icon-btn" onclick="goToSection(0)"><i class="bi bi-diamond"></i></button>
-  <button class="icon-btn" onclick="goToSection(1)"><i class="bi bi-hexagon"></i></button>
-  <button class="icon-btn" onclick="goToSection(2)"><i class="bi bi-octagon"></i></button>
+  <button class="icon-btn" onclick="goToSection(0)"><i class="bi bi-people"></i></button>
+  <button class="icon-btn" onclick="goToSection(1)"><i class="bi bi-diamond"></i></button>
+  <button class="icon-btn" onclick="goToSection(2)"><i class="bi bi-hexagon"></i></button>
+  <button class="icon-btn" onclick="goToSection(3)"><i class="bi bi-octagon"></i></button>
 </nav>
 
 
@@ -96,6 +116,26 @@
   <script src="js/lib/nav.js"></script>
   <script src="js/lib/videoModal.js"></script>
 
+  
+  <!-- Posicionar en Home y mostrar contenedor -->
+  <script>
+    window.addEventListener('load', function() {
+      const container = document.querySelector('.snap-container');
+      if (container) {
+        const vw = window.innerWidth || document.documentElement.clientWidth;
+        // Desactivar scroll suave temporalmente
+        container.style.scrollBehavior = 'auto';
+        // Posicionar en Home (índice 1) sin animación
+        container.scrollLeft = vw * 1;
+        // Reactivar scroll suave
+        container.style.scrollBehavior = 'smooth';
+        // Mostrar el contenedor después de 150ms
+        setTimeout(function() {
+          container.classList.add('ready');
+        }, 150);
+      }
+    });
+  </script>
  
 <!-- Modal de Video -->
 <div class="modal fade video-modal" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
