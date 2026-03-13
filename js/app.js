@@ -20,13 +20,24 @@
   window.renderer = renderer;
 
   // Lista de mapas disponibles (puedes añadir nuevas rutas aquí)
+  // Puede ser un string simple o un objeto {path: '...', step: 12}
   const MAPS = [
-    'assets/pixel_map_figures3.json',
-    'assets/map.json',
-    'assets/pixel_map_el_error.json'
+    { path: 'assets/map.json', step: 15 },
+    { path: 'assets/pixel_map_el_error.json', step: 8 },
+    { path: 'assets/pixel_map_figures3.json', step: 6 }
   ];
   // Exponer para uso externo / consola
   window.MAPS = MAPS;
+
+  // Función auxiliar para extraer path y step de un elemento de MAPS
+  function getMapConfig(mapItem) {
+    if (typeof mapItem === 'string') {
+      return { path: mapItem, step: null };
+    } else if (mapItem && typeof mapItem === 'object') {
+      return { path: mapItem.path, step: mapItem.step || null };
+    }
+    return { path: null, step: null };
+  }
 
   var indexMAP = 1;
 
@@ -116,23 +127,50 @@
       return MAPS[idx] || MAPS[0];
     }
     // Si coincide con una ruta en MAPS, devuélvelo
-    if (MAPS.indexOf(p) !== -1) return p;
+    const mapPaths = MAPS.map(m => typeof m === 'string' ? m : m.path);
+    if (mapPaths.indexOf(p) !== -1) return p;
     // Otherwise use the raw value (allows arbitrary paths)
     return p;
   }
-  loadMap(getMapPath()).then(data=>{ renderer.setMapData(data); updateFromUI(true); syncUI(); renderer.requestTick && renderer.requestTick(); }).catch(err=>{ console.error('No se pudo cargar el mapa', err); });
+  
+  // Cargar mapa inicial
+  const initialMapItem = getMapPath();
+  const initialConfig = getMapConfig(initialMapItem);
+  loadMap(initialConfig.path).then(data=>{
+    const options = initialConfig.step ? { step: initialConfig.step } : undefined;
+    renderer.setMapData(data, options);
+    // Si se especificó un step, actualizar el UI
+    if (initialConfig.step && typeof initialConfig.step === 'number') {
+      stepEl.value = initialConfig.step;
+    }
+    updateFromUI(true);
+    syncUI();
+    renderer.requestTick && renderer.requestTick();
+  }).catch(err=>{ console.error('No se pudo cargar el mapa', err); });
 
   // Permite cambiar el mapa dinámicamente desde la consola o desde UI:
   window.changeMap = function(path){
     // allow numeric index or string path
     var target = path;
+    var config = null;
+    
     if (typeof path === 'number' || (/^\d+$/.test(String(path)))){
       var idx = parseInt(path,10);
       target = MAPS[idx] || MAPS[0];
+      config = getMapConfig(target);
+    } else {
+      // Si es un string, usarlo directamente (retrocompatibilidad)
+      config = { path: target, step: null };
     }
-    loadMap(target)
+    
+    loadMap(config.path)
       .then(data=>{
-        renderer.setMapData(data);
+        const options = config.step ? { step: config.step } : undefined;
+        renderer.setMapData(data, options);
+        // Si se especificó un step, actualizar el slider del UI
+        if (config.step && typeof config.step === 'number') {
+          stepEl.value = config.step;
+        }
         updateFromUI(true);
         syncUI();
         renderer.fadeIn(150); // efecto de fade-in rápido al cambiar mapa
@@ -151,7 +189,7 @@
     function getNextMap() {
   const current = MAPS[indexMAP];
   indexMAP = (indexMAP + 1) % MAPS.length;
-  return current;
+  return indexMAP - 1 < 0 ? MAPS.length - 1 : indexMAP - 1;
 }
 
 function toggleMenu() {

@@ -60,7 +60,7 @@
   };
 
 
-  DotsRenderer.prototype.setMapData = function (mapData) {
+  DotsRenderer.prototype.setMapData = function (mapData, options) {
     this.mapData = mapData;
     this._totalPixels = 0;
     this._logoPixels = 0;
@@ -72,6 +72,12 @@
     // initialize moved flags: set false for every logo pixel in the map
     this._movedFlags.clear();
     this._logoPixelsMoved = 0;
+    
+    // Aplicar step opcional si se proporciona y es válido
+    if (options && typeof options.step === 'number' && options.step > 0) {
+      this.BASE_STEP = Math.round(options.step);
+    }
+    
     if (mapData && mapData.compressed_map) {
       var rows = mapData.compressed_map;
       for (var ry = 0; ry < rows.length; ry++) {
