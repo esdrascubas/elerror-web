@@ -21,6 +21,7 @@
 
   // Lista de mapas disponibles (puedes añadir nuevas rutas aquí)
   const MAPS = [
+    'assets/pixel_map_figures3.json',
     'assets/map.json',
     'assets/pixel_map_el_error.json'
   ];
