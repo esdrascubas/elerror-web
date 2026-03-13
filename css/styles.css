@@ -216,7 +216,7 @@ body {
 
 /* Fondo de imagen para aboutus */
 #aboutus {
-  background-image: url('/img/Error_paint.jpeg');
+  background-image: url('../img/Error_paint.jpeg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
