@@ -127,7 +127,7 @@
     this.animId = (this._needsAnimation() ? requestAnimationFrame(this._tick) : 0);
   };
   DotsRenderer.prototype._needsAnimation = function () {
-    return this.pointerActive || this.liveCount > 0;
+    return this.pointerActive || this.liveCount > 0 || this._fadeUntil > 0;
   };
 
   DotsRenderer.prototype._onResize = function () {
@@ -139,9 +139,85 @@
     // Colors via CSS variables (external to JS)
     var root = getComputedStyle(document.documentElement);
     var bg = root.getPropertyValue('--bg-color').trim() || '#000000';
-    var logo = root.getPropertyValue('--lo  go-color').trim() || '#ff7701';
+    var logoStr = root.getPropertyValue('--logo-color-list').trim() || '#ff7701';
     var returned = root.getPropertyValue('--returned-color').trim() || root.getPropertyValue('--returned_color').trim() || '';
-    return { bg: bg, logo: logo, returned: returned };
+    
+    // Parsear logo-color-list: puede ser un solo color o una lista separada por comas
+    var logoColors = logoStr.split(',').map(function(c) { return c.trim(); }).filter(function(c) { return c.length > 0; });
+    
+    return { bg: bg, logoColors: logoColors, returned: returned };
+  };
+  
+  // Función auxiliar para obtener un color aleatorio de la lista de colores logo
+  DotsRenderer.prototype._getRandomLogoColor = function (logoColors) {
+    if (!logoColors || logoColors.length === 0) return '#ff7701';
+    if (logoColors.length === 1) return logoColors[0];
+    var idx = Math.floor(Math.random() * logoColors.length);
+    return logoColors[idx];
+  };
+
+  // Función auxiliar para convertir color hex/rgb a componentes RGB
+  DotsRenderer.prototype._parseColor = function (colorStr) {
+    // Si es rgba o rgb
+    var rgbaMatch = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbaMatch) {
+      return { r: parseInt(rgbaMatch[1]), g: parseInt(rgbaMatch[2]), b: parseInt(rgbaMatch[3]) };
+    }
+    // Si es hex
+    var hex = colorStr.replace('#', '');
+    if (hex.length === 3) {
+      hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    }
+    return {
+      r: parseInt(hex.substring(0, 2), 16),
+      g: parseInt(hex.substring(2, 4), 16),
+      b: parseInt(hex.substring(4, 6), 16)
+    };
+  };
+
+  // Función auxiliar para interpolar entre dos colores
+  DotsRenderer.prototype._lerpColor = function (color1, color2, t) {
+    return {
+      r: Math.floor(color1.r + (color2.r - color1.r) * t),
+      g: Math.floor(color1.g + (color2.g - color1.g) * t),
+      b: Math.floor(color1.b + (color2.b - color1.b) * t)
+    };
+  };
+
+  // Función auxiliar para obtener color de fuego basado en "temperatura"
+  // Usa los colores de CSS para crear el gradiente
+  DotsRenderer.prototype._getFireColor = function (intensity, alpha, baseColor) {
+    // intensity: 0 (frío) a 1 (caliente)
+    alpha = alpha !== undefined ? alpha : 1.0;
+    
+    // Parsear el color base de CSS
+    var base = this._parseColor(baseColor || '#ff7701');
+    
+    // Crear gradiente desde versión oscura del color base hasta blanco
+    // 0.0 - 0.3: Color oscuro (30% del brillo original)
+    // 0.3 - 0.6: Color base
+    // 0.6 - 1.0: Color base hacia blanco
+    
+    var color;
+    if (intensity < 0.3) {
+      // Oscurecer el color base
+      var darkFactor = intensity / 0.3; // 0 a 1
+      var dark = { r: Math.floor(base.r * 0.3), g: Math.floor(base.g * 0.3), b: Math.floor(base.b * 0.3) };
+      color = this._lerpColor(dark, base, darkFactor);
+    } else if (intensity < 0.6) {
+      // Mantener el color base, quizás ligeramente más brillante
+      var t = (intensity - 0.3) / 0.3;
+      var bright = { r: Math.min(255, Math.floor(base.r * 1.2)), g: Math.min(255, Math.floor(base.g * 1.2)), b: Math.min(255, Math.floor(base.b * 1.2)) };
+      color = this._lerpColor(base, bright, t);
+    } else {
+      // Interpolar hacia el blanco
+      var t = (intensity - 0.6) / 0.4;
+      var current = { r: Math.min(255, Math.floor(base.r * 1.2)), g: Math.min(255, Math.floor(base.g * 1.2)), b: Math.min(255, Math.floor(base.b * 1.2)) };
+      var white = { r: 255, g: 255, b: 255 };
+      color = this._lerpColor(current, white, t);
+    }
+    
+    return 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', ' + alpha + ')';
   };
 
   DotsRenderer.prototype.draw = function (now) {
@@ -209,10 +285,7 @@ ctx.globalAlpha = alpha;
 
 
     ctx.fillStyle = colors.bg; ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-    ctx.fillStyle = colors.logo;
-
-    var pathLogo = new Path2D();
-    var pathReturned = new Path2D();
+    
     this.liveCount = 0; var MAX_DISP = Math.round(R * 0.9);
 
     for (var y = 0; y < this.canvas.height; y += stepPx) {
@@ -300,50 +373,88 @@ ctx.globalAlpha = alpha;
             var returnedHysteresisFrames = 3;
             var isReturned = false;
             if (this._movedFlags.has(mapKey) && this._movedFlags.get(mapKey) && st._restCount >= returnedHysteresisFrames) isReturned = true;
+            
+            // Efecto de fuego: calcular intensidad basada en movimiento y posición
+            var fireIntensity = 0;
+            var particleAlpha = 1.0;
+            var particleRadius = radiusPx;
+            
+            if (moved || !atRest) {
+              // Intensidad basada en velocidad (más rápido = más caliente)
+              var speed = Math.hypot(st.vx, st.vy);
+              fireIntensity = Math.min(1, speed / (velThresholdPerSec * 3));
+              // Agregar variación aleatoria para efecto de parpadeo
+              fireIntensity = fireIntensity * (0.7 + Math.random() * 0.3);
+              // Variar tamaño (partículas más calientes son más pequeñas y brillantes)
+              particleRadius = radiusPx * (1 + fireIntensity * 0.5);
+              // Variar opacidad
+              particleAlpha = 0.8 + fireIntensity * 0.2;
+            } else if (isReturned) {
+              // Partículas en reposo tienen intensidad baja (brasas)
+              fireIntensity = 0.1 + Math.random() * 0.15;
+              particleRadius = Math.max(1, Math.round(radiusPx * 1.4));
+              particleAlpha = 0.6 + Math.random() * 0.2;
+            } else {
+              // Estado normal
+              fireIntensity = 0.3 + Math.random() * 0.2;
+              particleAlpha = 0.9;
+            }
+            
+            // Dibujar partícula con color de fuego
             if (isReturned) {
-              // optionally log the transition for debugging
-              if (window.DOTS_RETURNED_DEBUG && !st._returnedLogged) {
-                try { console.log('returned:', mapKey, { ix: mapX, iy: yLogic, state: st }); } catch (e) { }
-                st._returnedLogged = true;
-              }
-              // draw returned with slightly larger radius for visibility
-              var returnedRadius = Math.max(1, Math.round(radiusPx * 1.4));
-              pathReturned.moveTo(cx + returnedRadius, cy);
-              pathReturned.arc(cx, cy, returnedRadius, 0, Math.PI * 2);
+              // Dibujar con efecto de brasa usando el color returned
+              ctx.save();
+              ctx.globalAlpha = alpha * particleAlpha;
+              // Usar returned_color si está disponible, sino usar un logo color aleatorio
+              var returnedColor = colors.returned || this._getRandomLogoColor(colors.logoColors);
+              ctx.fillStyle = this._getFireColor(fireIntensity, 1, returnedColor);
+              ctx.beginPath();
+              ctx.arc(cx, cy, particleRadius, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
               this._dotReturned++;
             } else {
-              pathLogo.moveTo(cx + radiusPx, cy); pathLogo.arc(cx, cy, radiusPx, 0, Math.PI * 2);
+              // Dibujar con efecto de llama activa usando un color aleatorio de la lista
+              ctx.save();
+              ctx.globalAlpha = alpha * particleAlpha;
+              
+              // Elegir un color aleatorio de la lista para esta partícula
+              var particleColor = this._getRandomLogoColor(colors.logoColors);
+              
+              // Crear efecto de resplandor con múltiples capas
+              if (fireIntensity > 0.5) {
+                // Capa exterior (resplandor difuso)
+                ctx.fillStyle = this._getFireColor(fireIntensity * 0.6, 0.3, particleColor);
+                ctx.beginPath();
+                ctx.arc(cx, cy, particleRadius * 1.8, 0, Math.PI * 2);
+                ctx.fill();
+              }
+              
+              // Capa principal
+              ctx.fillStyle = this._getFireColor(fireIntensity, 1, particleColor);
+              ctx.beginPath();
+              ctx.arc(cx, cy, particleRadius, 0, Math.PI * 2);
+              ctx.fill();
+              
+              // Núcleo brillante para partículas muy calientes
+              if (fireIntensity > 0.7) {
+                ctx.fillStyle = this._getFireColor(1.0, 0.8, particleColor);
+                ctx.beginPath();
+                ctx.arc(cx, cy, particleRadius * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+              }
+              
+              ctx.restore();
               this._dotOriginal++;
             }
           }
         }
         xPos += count;
       }
-      if (((y / stepPx) % 16) === 0) {
-        // flush batched paths with appropriate colors
-        if (pathLogo && pathLogo._segments !== undefined) { /* noop to avoid lint */ }
-        if (ctx && pathLogo) { ctx.fillStyle = colors.logo; ctx.fill(pathLogo); }
-        if (ctx && pathReturned) { if (colors.returned) { ctx.fillStyle = colors.returned; ctx.fill(pathReturned); } else { ctx.fillStyle = colors.logo; ctx.fill(pathReturned); } }
-        pathLogo = new Path2D(); pathReturned = new Path2D();
-      }
     }
-    // final flush
-    if (pathLogo) {
-      ctx.fillStyle = colors.logo;
-      ctx.fill(pathLogo);
-    }
-
-    if (pathReturned) {
-      if (colors.returned) {
-        ctx.fillStyle = colors.returned;
-        ctx.fill(pathReturned);
-      }
-      else {
-        ctx.fillStyle = colors.logo;
-        ctx.fill(pathReturned);
-      }
-    }
-    // moved-pixels reporting removed
+    
+    // Restaurar contexto después del fade
+    ctx.restore();
 
     //console.log("Original:", this._dotOriginal, "; Returned: ", this._dotReturned);
 

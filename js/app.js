@@ -24,7 +24,7 @@
   const MAPS = [
     { path: 'assets/map.json', step: 15 },
     { path: 'assets/pixel_map_el_error.json', step: 8 },
-    { path: 'assets/pixel_map_figures3.json', step: 6 }
+    { path: 'assets/pixel_map_figuress.json', step: 15 }
   ];
   // Exponer para uso externo / consola
   window.MAPS = MAPS;

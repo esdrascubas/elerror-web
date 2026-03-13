@@ -1,6 +1,18 @@
 :root {
   --bg-color: rgba(1, 1, 1, 0);;   /* fondo */
-  --logo-color: #ff7701; /* color de los puntos */
+  
+  /* Color principal para usar en toda la web (CSS) */
+  --logo-color: #ff7701; /* naranja */
+  
+  /* Lista de colores para el efecto multicolor en el canvas */
+  --logo-color-list: #FF4500, #FF8000, #FF0000;
+  /* Ejemplos de listas multicolor:
+     Fuego realista: #ff0000, #ff4500, #ff7701, #ffaa00, #ffd700
+     Fuego azul: #0066ff, #0088ff, #00aaff, #00ccff, #00ffff
+     Arcoíris: #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3
+     Fuego verde: #00ff00, #33ff33, #66ff66, #99ff99, #ccffcc
+  */
+  
   --returned_color: #ffffff;
   --returned_color: #000000;  
   --body-bg: #000000;   /* fondo */
