@@ -69,9 +69,10 @@
   // Pointer events
   function cssToDeviceScale(){ const sx = canvas.width / canvas.clientWidth; const sy = canvas.height / canvas.clientHeight; return {sx, sy}; }
   canvas.addEventListener('pointermove', (e)=>{ const {sx,sy}=cssToDeviceScale(); renderer.setPointer(true, e.offsetX*sx, e.offsetY*sy); });
-  canvas.addEventListener('pointerleave', ()=>{ renderer.setPointer(false); });
+  // Comentado para mantener el movimiento activo incluso fuera del canvas
+  // canvas.addEventListener('pointerleave', ()=>{ renderer.setPointer(false); });
   canvas.addEventListener('pointerdown', (e)=>{ try{ canvas.setPointerCapture(e.pointerId);}catch(_){} const {sx,sy}=cssToDeviceScale(); renderer.setPointer(true, e.offsetX*sx, e.offsetY*sy); if(e.cancelable) e.preventDefault(); });
-  canvas.addEventListener('pointerup', (e)=>{ try{ canvas.releasePointerCapture(e.pointerId);}catch(_){} renderer.setPointer(false); });
+  canvas.addEventListener('pointerup', (e)=>{ try{ canvas.releasePointerCapture(e.pointerId);}catch(_){} /* No desactivar el pointer para mantener el efecto */ });
   canvas.addEventListener('pointercancel', ()=>{ renderer.setPointer(false); });
 
   // Touch hover emulation (press & move)
@@ -145,6 +146,13 @@
     }
     updateFromUI(true);
     syncUI();
+    
+    // Activar el pointer automáticamente al cargar para iniciar el movimiento
+    // Posicionar en el centro del canvas
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    renderer.setPointer(true, centerX, centerY);
+    
     renderer.requestTick && renderer.requestTick();
   }).catch(err=>{ console.error('No se pudo cargar el mapa', err); });
 

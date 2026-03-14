@@ -138,7 +138,7 @@
   DotsRenderer.prototype._readColorsFromCSS = function () {
     // Colors via CSS variables (external to JS)
     var root = getComputedStyle(document.documentElement);
-    var bg = root.getPropertyValue('--bg-color').trim() || '#000000';
+    var bg = root.getPropertyValue('--canvas-bg-color').trim() || 'transparent';
     var logoStr = root.getPropertyValue('--logo-color-list').trim() || '#ff7701';
     var returned = root.getPropertyValue('--returned-color').trim() || root.getPropertyValue('--returned_color').trim() || '';
     
